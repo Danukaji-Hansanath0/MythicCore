@@ -1,13 +1,151 @@
 # Kingdom Quest
 
-A turn-based console RPG built in Java demonstrating Object-Oriented Programming principles.
+## Class Architecture & Relationships
 
-## How to Compile and Run
+Kingdom Quest is a turn-based console RPG built with 18 Java classes organized into 5 packages. This document explains what each class does, how they connect, and the OOP principles behind the design.
 
-```bash
-javac -d src -sourcepath src src/GameEngine.java
-java -cp src GameEngine
-```
+---
+
+## Package: `core`
+
+### `CombatMan` (Interface)
+The contract for any entity that participates in battle. Defines:
+- `attack()` — returns damage dealt
+- `takeDmg(int)` — reduces health
+- `isAlive()` — checks if still fighting
+- `getName()`, `getHealth()`, `getMaxHealth()` — accessors
+
+Implemented by both `Character` and `Enemy`.
+
+### `Battle` (Class)
+Manages turn-based combat between one Character and one Enemy. Uses a `Scanner` for player input. Contains the battle loop (`while` both are alive), handles attack, item use, status viewing, and fleeing. Returns `true` if player wins, `false` otherwise.
+
+---
+
+## Package: `model`
+
+### `Character` (Abstract Class, implements `CombatMan`)
+Base class for all player archetypes. Encapsulates:
+- `name`, `health`, `maxHealth`, `level`, `exp` — core RPG stats
+- `inventory` (HAS-A `Inventory`) — items the character carries
+- `questBook` (HAS-A `QuestBook`) — active quests
+
+Key behaviors:
+- Constructor overloading: `Character(name)` chains via `this()` to `Character(name, maxHealth)`
+- `attack()` — calculates base damage + equipped weapon bonus
+- `getBaseAttack()` — abstract; each subclass defines its own formula
+- `gainExperience(int)` — adds EXP and auto-levels with a `while` loop when crossing thresholds
+- `isAlive()` — returns health > 0
+- `takeDmg(int)` — reduces health with bounds check
+- `heal(int)` — restores health up to max
+- All fields `private`, exposed via getters/setters
+
+### `Warrior` (extends `Character`)
+- Base HP: 150. Attack formula: `15 + level * 3`
+- Overrides `attack()` — 20% chance for critical strike (1.5x damage)
+
+### `Archer` (extends `Character`)
+- Base HP: 100. Attack formula: `12 + level * 2`
+- Overrides `attack()` — 30% chance for double shot (+50% damage)
+
+### `Wizard` (extends `Character`)
+- Base HP: 80. Attack formula: `20 + level * 4`
+- Overrides `attack()` — 25% chance for arcane blast (2x damage)
+
+---
+
+## Package: `enemy`
+
+### `Enemy` (Abstract Class, implements `CombatMan`)
+Base class for all hostile entities. Encapsulates:
+- `name`, `health`, `maxHealth`, `baseAttack`, `expReward`
+- `attack()` — base damage with small variance (`Math.random() * 5 - 2`)
+- All fields `private` with getters/setters
+
+### `Goblin` (extends `Enemy`)
+- HP: 40, ATK: 8, EXP: 25. 20% chance for dirty punch (+5 damage)
+
+### `Orc` (extends `Enemy`)
+- HP: 80, ATK: 14, EXP: 50. 15% chance for axe swing (1.8x damage)
+
+### `DragonBoss` (extends `Enemy`)
+- HP: 300, ATK: 30, EXP: 200. Transforms at half HP — enters enrage mode (+15 ATK) with 30% fire breath (+20 damage)
+
+---
+
+## Package: `item`
+
+### `Item` (Abstract Class)
+Base class for all items. Fields: `name`, `description`, `value` (all `private`). Abstract methods:
+- `use(CombatMan target)` — each subclass defines its effect
+- `getType()` — returns "Weapon" or "Consumable"
+- Constructor chaining via `this()` for optional value parameter
+
+### `Weapon` (extends `Item`)
+Adds `attackPower` field. When used, equips to increase character damage. Constructor overloading: two-arg form chains to four-arg with defaults.
+
+### `Consumable` (extends `Item`)
+Adds `healAmount` field. When used on a Character, calls `heal()` to restore HP. Constructor overloading: two-arg form chains to three-arg with default description.
+
+### `Inventory` (Class)
+HAS-A relationship: Character owns an Inventory. Contains:
+- `Item[] items` — fixed-size Java Array (max 10)
+- `count` — tracks current number of items
+- `equippedWeaponIndex` — tracks actively equipped weapon
+- Methods: `addItem()`, `removeItem()`, `equipWeapon()`, `getEquippedWeapon()`, `displayInventory()`
+- Uses `for` loops to shift array elements on removal and `instanceof` checks for weapon validation
+
+---
+
+## Package: `progression`
+
+### `Reward` (Class)
+Simple data class for quest completion rewards: `exp`, `gold`, `itemName`. Constructor overloading: two-arg (exp, gold) chains to three-arg (exp, gold, itemName).
+
+### `Quest` (Class)
+Represents a single quest with: `name`, `description`, `targetEnemy`, `requiredKills`, `currentKills`, `reward` (HAS-A `Reward`), `completed`, `active` flags.
+- `addKill(String enemyName)` — increments progress when kill matches target
+- `getProgress()` — returns formatted status string
+
+### `QuestBook` (Class)
+HAS-A relationship: Character owns a QuestBook. Contains:
+- `Quest[] quests` — fixed-size Java Array (max 5)
+- `count` — tracks current quests
+- Methods: `addQuest()`, `activateQuest()`, `getActiveQuests()`, `notifyKill()` (iterates all quests to update progress)
+
+---
+
+## Package: root
+
+### `GameEngine` (Class)
+Main entry point with `main()`. Orchestrates everything:
+- Character creation via `switch-case` for class selection
+- Main menu loop (`while running`) with 7 options using `switch-case`
+- `exploreArea()` — generates random enemies (`if-else` probability chain), starts Battle
+- Shop with `Weapon[]` and `Consumable[]` arrays
+- Quest reward checking via `for` loop through QuestBook
+- All Scanner input wrapped in `try-catch` for `NumberFormatException`
+
+---
+
+## OOP Principles Summary
+
+| Principle | Implementation |
+|---|---|
+| **Interface** | `CombatMan` — contract for Character and Enemy |
+| **Abstract Class** | `Character`, `Enemy`, `Item` — template with abstract methods |
+| **Inheritance** | Warrior/Archer/Wizard -> Character; Goblin/Orc/DragonBoss -> Enemy; Weapon/Consumable -> Item |
+| **Polymorphism** | `attack()` overridden in all 6 subclasses with unique behavior; `use()` in Weapon vs Consumable |
+| **Method Overloading** | Multiple constructors using `this()` in Character, Item, Weapon, Consumable, Enemy, Goblin, Orc, DragonBoss, Reward (+ others) |
+| **Encapsulation** | All fields private/protected, accessed exclusively through public getters/setters |
+| **Composition (HAS-A)** | Character -> Inventory + QuestBook; Quest -> Reward |
+| **Aggregation** | Inventory contains Item[]; QuestBook contains Quest[] |
+| **Java Arrays** | `Item[]` in Inventory (size 10), `Quest[]` in QuestBook (size 5), `Weapon[]`/`Consumable[]` for shop display |
+| **while loops** | Game main menu loop, battle loop, EXP level-up checking |
+| **for loops** | Array iteration in Inventory.removeItem(), QuestBook.notifyKill(), checkQuestRewards(), shop display |
+| **if-else / switch** | Menu handling, battle choices, enemy generation probability, gold checks |
+| **Operators** | `+`, `-`, `*` (damage/healing math), `>`, `<`, `==` (comparisons), `&&`, `\|\|` (logic), `++`, `+=` (increment) |
+| **Exception Handling** | `try-catch` on all `scanner.nextLine()` -> `Integer.parseInt()` calls |
 
 ## Class Diagram
 
@@ -18,7 +156,7 @@ classDiagram
     class CombatMan {
         <<interface>>
         +attack() int
-        +takeDmg(int dmg) void
+        +takeDmg(int) void
         +isAlive() boolean
         +getName() String
         +getHealth() int
@@ -34,42 +172,32 @@ classDiagram
         -int exp
         -Inventory inventory
         -QuestBook questBook
-        +Character(String name)
-        +Character(String name, int maxHealth)
+        +Character(String)
+        +Character(String, int)
         +attack() int
         #getBaseAttack() int*
-        +gainExperience(int amount) void
-        +isAlive() boolean
-        +takeDmg(int amount) void
-        +heal(int amount) void
-        +getName() String
-        +getHealth() int
-        +setHealth(int health) void
-        +getMaxHealth() int
-        +getLevel() int
-        +getExp() int
+        +gainExperience(int) void
+        +takeDmg(int) void
+        +heal(int) void
         +getInventory() Inventory
         +getQuestBook() QuestBook
         +getStats() String
     }
 
     class Warrior {
-        +Warrior(String name)
-        +Warrior(String name, int maxHealth)
+        +Warrior(String)
         +getBaseAttack() int
         +attack() int
     }
 
     class Archer {
-        +Archer(String name)
-        +Archer(String name, int maxHealth)
+        +Archer(String)
         +getBaseAttack() int
         +attack() int
     }
 
     class Wizard {
-        +Wizard(String name)
-        +Wizard(String name, int maxHealth)
+        +Wizard(String)
         +getBaseAttack() int
         +attack() int
     }
@@ -81,36 +209,29 @@ classDiagram
         -int maxHealth
         -int baseAttack
         -int expReward
-        +Enemy(String name, int maxHealth, int baseAttack, int expReward)
+        +Enemy(String, int, int, int)
         +attack() int
-        +takeDmg(int dmg) void
+        +takeDmg(int) void
         +isAlive() boolean
         +getName() String
-        +getHealth() int
-        +getMaxHealth() int
-        +getBaseAttack() int
         +getExpReward() int
         +getDisplayInfo() String
     }
 
     class Goblin {
         +Goblin()
-        +Goblin(String name)
         +attack() int
     }
 
     class Orc {
         +Orc()
-        +Orc(String name)
         +attack() int
     }
 
     class DragonBoss {
         -boolean enraged
         +DragonBoss()
-        +DragonBoss(String name)
         +attack() int
-        +isEnraged() boolean
     }
 
     class Item {
@@ -118,81 +239,60 @@ classDiagram
         -String name
         -String description
         -int value
-        +Item(String name, String description)
-        +Item(String name, String description, int value)
-        +use(CombatMan target) String*
+        +Item(String, String)
+        +Item(String, String, int)
+        +use(CombatMan) String*
         +getType() String*
-        +getName() String
-        +getDescription() String
-        +getValue() int
     }
 
     class Weapon {
         -int attackPower
-        +Weapon(String name, String description, int attackPower)
-        +Weapon(String name, int attackPower)
-        +use(CombatMan target) String
+        +Weapon(String, String, int)
+        +Weapon(String, int)
+        +use(CombatMan) String
         +getType() String
-        +getAttackPower() int
     }
 
     class Consumable {
         -int healAmount
-        +Consumable(String name, String description, int healAmount)
-        +Consumable(String name, int healAmount)
-        +use(CombatMan target) String
+        +Consumable(String, String, int)
+        +Consumable(String, int)
+        +use(CombatMan) String
         +getType() String
-        +getHealAmount() int
     }
 
     class Inventory {
         -Item[] items
         -int count
         -int equippedWeaponIndex
-        +Inventory()
-        +addItem(Item item) boolean
-        +removeItem(int index) Item
-        +getItem(int index) Item
-        +equipWeapon(int index) boolean
+        +addItem(Item) boolean
+        +removeItem(int) Item
+        +equipWeapon(int) boolean
         +getEquippedWeapon() Weapon
-        +getAllItems() Item[]
-        +getCount() int
         +displayInventory() void
     }
 
     class Quest {
         -String name
-        -String description
         -String targetEnemy
         -int requiredKills
         -int currentKills
         -Reward reward
         -boolean completed
         -boolean active
-        +Quest(String name, String description, String targetEnemy, int requiredKills, Reward reward)
-        +addKill(String enemyName) void
-        +getName() String
-        +getDescription() String
-        +getTargetEnemy() String
-        +getRequiredKills() int
-        +getCurrentKills() int
+        +Quest(String, String, String, int, Reward)
+        +addKill(String) void
         +getReward() Reward
-        +isCompleted() boolean
-        +isActive() boolean
-        +setActive(boolean active) void
         +getProgress() String
     }
 
     class QuestBook {
         -Quest[] quests
         -int count
-        +QuestBook()
-        +addQuest(Quest quest) boolean
-        +activateQuest(int index) void
-        +getQuest(int index) Quest
-        +getCount() int
+        +addQuest(Quest) boolean
+        +activateQuest(int) void
         +getActiveQuests() Quest[]
-        +notifyKill(String enemyName) void
+        +notifyKill(String) void
         +displayQuests() void
     }
 
@@ -200,25 +300,15 @@ classDiagram
         -int exp
         -int gold
         -String itemName
-        +Reward(int exp, int gold)
-        +Reward(int exp, int gold, String itemName)
-        +getExp() int
-        +getGold() int
-        +getItemName() String
-        +getDescription() String
+        +Reward(int, int)
+        +Reward(int, int, String)
     }
 
     class Battle {
         -Character player
         -Enemy enemy
         -Scanner scanner
-        -boolean fled
-        +Battle(Character player, Enemy enemy, Scanner scanner)
         +start() boolean
-        -playerTurnAttack() void
-        -playerTurnItem() void
-        -attemptFlee() boolean
-        -enemyTurn() void
     }
 
     class GameEngine {
@@ -226,25 +316,8 @@ classDiagram
         -Character player
         -boolean running
         -int gold
-        -int questsCompleted
-        +GameEngine()
         +start() void
-        -printBanner() void
-        -createCharacter() void
-        -initializeStarterItems() void
-        -initializeQuests() void
-        -displayMainMenu() void
-        -handleMainMenu(int choice) void
-        -exploreArea() void
-        -generateRandomEnemy() Enemy
-        -checkQuestRewards() void
-        -displayStatus() void
-        -openInventory() void
-        -viewQuests() void
-        -openShop() void
-        -restAtInn() void
-        -readIntInput() int
-        +main(String[] args) void
+        +main(String[]) void
     }
 
     Character ..|> CombatMan
@@ -257,57 +330,42 @@ classDiagram
     DragonBoss --|> Enemy
     Weapon --|> Item
     Consumable --|> Item
-    Character *-- Inventory
-    Character *-- QuestBook
-    Inventory o-- Item
-    QuestBook o-- Quest
-    Quest *-- Reward
-    Battle o-- Character
-    Battle o-- Enemy
-    GameEngine o-- Character
-    GameEngine o-- Battle
+    Character *-- Inventory : owns
+    Character *-- QuestBook : owns
+    Inventory o-- Item : contains
+    QuestBook o-- Quest : contains
+    Quest *-- Reward : has
+    Battle o-- Character : uses
+    Battle o-- Enemy : uses
+    GameEngine o-- Character : runs
+    GameEngine o-- Battle : creates
 ```
 
 ## Project Structure
 
 ```
 src/
-├── GameEngine.java          (main entry point)
+├── GameEngine.java          # Entry point, main menu, shop
 ├── core/
-│   ├── CombatMan.java       (interface)
-│   └── Battle.java          (battle simulation)
+│   ├── CombatMan.java       # Interface for combat
+│   └── Battle.java          # Turn-based combat loop
 ├── model/
-│   ├── Character.java       (abstract base)
-│   ├── Warrior.java
-│   ├── Archer.java
-│   └── Wizard.java
+│   ├── Character.java       # Abstract base for player
+│   ├── Warrior.java         # High HP, crit strikes
+│   ├── Archer.java          # Balanced, double shots
+│   └── Wizard.java          # Low HP, arcane blast
 ├── item/
-│   ├── Item.java            (abstract base)
-│   ├── Weapon.java
-│   ├── Consumable.java
-│   └── Inventory.java
+│   ├── Item.java            # Abstract base for items
+│   ├── Weapon.java          # Attack power boost
+│   ├── Consumable.java      # HP restoration
+│   └── Inventory.java       # Item array manager
 ├── enemy/
-│   ├── Enemy.java           (abstract base)
-│   ├── Goblin.java
-│   ├── Orc.java
-│   └── DragonBoss.java
+│   ├── Enemy.java           # Abstract base for enemies
+│   ├── Goblin.java          # Weak, fast
+│   ├── Orc.java             # Medium, heavy hits
+│   └── DragonBoss.java      # Boss with enrage phase
 └── progression/
-    ├── Quest.java
-    ├── QuestBook.java
-    └── Reward.java
+    ├── Quest.java           # Kill-count objective
+    ├── QuestBook.java       # Quest array manager
+    └── Reward.java          # EXP, gold, item reward
 ```
-
-## OOP Concepts Demonstrated
-
-| Concept | Where |
-|---------|-------|
-| Interface | `CombatMan` - contract for all combat entities |
-| Abstract Classes | `Character`, `Enemy`, `Item` |
-| Inheritance | Warrior/Archer/Wizard extends Character; Goblin/Orc/DragonBoss extends Enemy; Weapon/Consumable extends Item |
-| Encapsulation | All fields private, accessed via getters/setters |
-| Polymorphism | `attack()` overridden in every subclass with unique behavior |
-| Overloading | Multiple constructors via `this()` chaining in Character, Item, Weapon, Consumable, Enemy, Goblin, Orc, DragonBoss |
-| HAS-A (Composition) | Character owns Inventory + QuestBook; Inventory holds Item[]; QuestBook holds Quest[]; Quest has Reward |
-| Arrays | `Item[]` in Inventory, `Quest[]` in QuestBook, `Weapon[]`/`Consumable[]` in shop |
-| Exception Handling | try-catch for NumberFormatException on all Scanner input |
-| Flow Control | while loops for menus/battle, for loops for arrays, if-else + switch-case |
