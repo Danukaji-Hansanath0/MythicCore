@@ -2,6 +2,16 @@
 
 ---
 
+## 9.1 Class Diagram
+
+A full PlantUML class diagram is available at: [`KingdomQuest_ClassDiagram.puml`](KingdomQuest_ClassDiagram.puml)
+
+**To render the diagram:**
+- **Visual Paradigm**: File > Import > PlantUML
+- **Online**: Paste into [plantuml.com](https://www.plantuml.com/plantuml)
+- **VS Code**: Install PlantUML extension, preview with `Alt+D`
+- **IntelliJ**: Install PlantUML Integration plugin
+
 ## 9.1 Project Structure
 
 ```
