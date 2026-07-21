@@ -1,0 +1,224 @@
+@startuml Character_Class_Specifications
+' ============================================
+' Character Class Specifications
+' Kingdom Quest - OOP Section 1
+' ============================================
+
+skinparam classAttributeIconSize 0
+skinparam classFontSize 16
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam shadowing false
+skinparam monochrome false
+
+skinparam class {
+    BackgroundColor White
+    BorderColor Black
+    ArrowColor Black
+    HeaderBackgroundColor #E8E8E8
+}
+
+skinparam abstract {
+    BackgroundColor #FFF8E1
+    BorderColor #D6B656
+}
+
+skinparam note {
+    BackgroundColor #FFFDE7
+    BorderColor #FFC107
+}
+
+' ============================================
+' INTERFACE
+' ============================================
+interface CombatMan <<interface>> {
+    +attack() : int
+    +takeDmg(dmg : int) : void
+    +isAlive() : boolean
+    +getName() : String
+    +getHealth() : int
+    +getMaxHealth() : int
+}
+
+' ============================================
+' ABSTRACT CLASS: Character
+' ============================================
+abstract class Character <<abstract>> {
+    ' ---- Fields ----
+    - name : String
+    - health : int
+    - maxHealth : int
+    - level : int
+    - exp : int
+    - inventory : Inventory
+    - questBook : QuestBook
+    ' ---- Constructors ----
+    + Character(name : String)
+    + Character(name : String, maxHealth : int)
+    ' ---- Methods ----
+    + attack() : int
+    # getBaseAttack() : int {abstract}
+    + gainExperience(amount : int) : void
+    + isAlive() : boolean
+    + takeDmg(amount : int) : void
+    + heal(amount : int) : void
+    + getName() : String
+    + setName(name : String) : void
+    + getHealth() : int
+    + setHealth(health : int) : void
+    + getMaxHealth() : int
+    + setMaxHealth(maxHealth : int) : void
+    + getLevel() : int
+    + setLevel(level : int) : void
+    + getExp() : int
+    + setExp(exp : int) : void
+    + getInventory() : Inventory
+    + getQuestBook() : QuestBook
+    + getStats() : String
+}
+
+' ============================================
+' CLASS: Warrior
+' ============================================
+class Warrior {
+
+    ' ---- Stats ----
+    Base HP : 150
+    Attack : 15 + (level x 3)
+    ' ---- Special ----
+    Special : Critical Strike
+    Chance : 20%
+    Multiplier : 1.5x damage
+    ' ---- Strategy ----
+    Strategy : High HP, strong melee, crit bursts
+
+    ' ---- Constructors ----
+    + Warrior(name : String)
+    ..
+    <i>chains: super(name, 150)</i>
+    + Warrior(name : String, maxHealth : int)
+    ..
+    <i>chains: super(name, maxHealth)</i>
+    ' ---- Methods ----
+    # getBaseAttack() : int
+    ..
+    <i>returns: 15 + (getLevel() * 3)</i>
+    + attack() : int
+    ..
+    <i>20% chance: damage = (int)(damage * 1.5)</i>
+    <i>Prints: "CRITICAL STRIKE!"</i>
+}
+
+' ============================================
+' CLASS: Archer
+' ============================================
+class Archer {
+
+    ' ---- Stats ----
+    Base HP : 100
+    Attack : 12 + (level x 2)
+    ' ---- Special ----
+    Special : Double Shot
+    Chance : 30%
+    Bonus : +50% damage
+    ' ---- Strategy ----
+    Strategy : Balanced, consistent damage output
+
+    ' ---- Constructors ----
+    + Archer(name : String)
+    ..
+    <i>chains: super(name, 100)</i>
+    + Archer(name : String, maxHealth : int)
+    ..
+    <i>chains: super(name, maxHealth)</i>
+    ' ---- Methods ----
+    # getBaseAttack() : int
+    ..
+    <i>returns: 12 + (getLevel() * 2)</i>
+    + attack() : int
+    ..
+    <i>30% chance: damage += (int)(damage * 0.5)</i>
+    <i>Prints: "rapid double shot!"</i>
+}
+
+' ============================================
+' CLASS: Wizard
+' ============================================
+class Wizard {
+
+    ' ---- Stats ----
+    Base HP : 80
+    Attack : 20 + (level x 4)
+    ' ---- Special ----
+    Special : Arcane Blast
+    Chance : 25%
+    Multiplier : 2x damage
+    ' ---- Strategy ----
+    Strategy : Low HP, highest damage, risky but powerful
+
+    ' ---- Constructors ----
+    + Wizard(name : String)
+    ..
+    <i>chains: super(name, 80)</i>
+    + Wizard(name : String, maxHealth : int)
+    ..
+    <i>chains: super(name, maxHealth)</i>
+    ' ---- Methods ----
+    # getBaseAttack() : int
+    ..
+    <i>returns: 20 + (getLevel() * 4)</i>
+    + attack() : int
+    ..
+    <i>25% chance: damage = (int)(damage * 2.0)</i>
+    <i>Prints: "ARCANE BLAST!"</i>
+}
+
+' ============================================
+' INHERITANCE RELATIONSHIPS
+' ============================================
+Warrior --|> Character : extends
+Archer --|> Character : extends
+Wizard --|> Character : extends
+
+' ============================================
+' INTERFACE REALIZATION
+' ============================================
+Character ..|> CombatMan : implements
+
+' ============================================
+' NOTES WITH SPECIFICATIONS
+' ============================================
+note top of Warrior
+  ===== WARRIOR =====
+  | Base HP:        150                |
+  | Attack Formula: 15 + (level x 3)  |
+  | Special:        Critical Strike    |
+  | Chance:         20%                |
+  | Multiplier:     1.5x damage       |
+  | Strategy:       High HP, strong    |
+  |                 melee, crit bursts |
+end note
+
+note top of Archer
+  ===== ARCHER =====
+  | Base HP:        100                |
+  | Attack Formula: 12 + (level x 2)  |
+  | Special:        Double Shot        |
+  | Chance:         30%                |
+  | Bonus:          +50% damage        |
+  | Strategy:       Balanced,          |
+  |                 consistent damage  |
+end note
+
+note top of Wizard
+  ===== WIZARD =====
+  | Base HP:        80                 |
+  | Attack Formula: 20 + (level x 4)  |
+  | Special:        Arcane Blast       |
+  | Chance:         25%                |
+  | Multiplier:     2x damage          |
+  | Strategy:       Low HP, highest    |
+  |                 damage, risky      |
+end note
+
+@enduml
