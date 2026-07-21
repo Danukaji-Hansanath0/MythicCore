@@ -1,8 +1,57 @@
 # Kingdom Quest
 
-## Class Architecture & Relationships
+A turn-based console RPG built in Java demonstrating Object-Oriented Programming principles. Developed as a campus project for **OOP Section 1**.
 
-Kingdom Quest is a turn-based console RPG built with 18 Java classes organized into 5 packages. This document explains what each class does, how they connect, and the OOP principles behind the design.
+## Overview
+
+Kingdom Quest is a text-based RPG where players create a character, battle enemies, complete quests, and progress through levels. The game features:
+
+- **3 Character Classes**: Warrior, Archer, Wizard — each with unique abilities
+- **3 Enemy Types**: Goblin, Orc, Dragon Boss — with special attack patterns
+- **Turn-based Combat**: Attack, use items, or flee
+- **Quest System**: Track kill objectives for rewards
+- **Shop & Inventory**: Buy weapons and potions, manage equipment
+- **Level Progression**: Gain EXP, level up, increase stats
+
+## Documentation
+
+- **[SRS Document (Single File)](SRS_Document.md)** — Software Requirements Specification (combined)
+- **[SRS Folder](srs/)** — Detailed SRS with 9 sections:
+  - [01 - Introduction](srs/01-introduction.md) — Purpose, Scope, Definitions
+  - [02 - Overview](srs/02-overview.md) — Product perspective, functions, architecture
+  - [03 - Functional Requirements](srs/03-functional-requirements.md) — All FR specs
+  - [04 - OOP Design](srs/04-oop-design.md) — OOP principles with code examples
+  - [05 - Class Specifications](srs/05-class-specifications.md) — All 18 classes detailed
+  - [06 - Use Cases](srs/06-use-cases.md) — Use case descriptions and diagrams
+  - [07 - Non-Functional Requirements](srs/07-non-functional.md) — NFRs
+  - [08 - Testing](srs/08-testing.md) — 76 test cases
+  - [09 - Appendix](srs/09-appendix.md) — Diagrams, tables, glossary
+- **[Video Script](script.md)** — Demonstration script for presentation
+
+## How to Compile & Run
+
+```bash
+# Compile
+javac -d build/classes -sourcepath src src/GameEngine.java
+
+# Run
+java -cp build/classes GameEngine
+```
+
+## Game Features
+
+| Feature | Description |
+|---------|-------------|
+| Character Creation | Choose from 3 classes with unique stats and abilities |
+| Exploration | Random enemy encounters with 50% Goblin, 35% Orc, 15% Dragon |
+| Turn-based Battle | Attack, use items, view status, or flee |
+| Inventory | Store up to 10 items, equip weapons, use consumables |
+| Quests | Complete kill-based objectives for EXP, gold, and items |
+| Shop | Purchase weapons and potions with earned gold |
+| Rest | Restore HP at the inn for gold |
+| Leveling | Gain EXP from battles and quests, level up to increase stats |
+
+## Class Architecture & Relationships
 
 ---
 
